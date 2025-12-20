@@ -146,28 +146,37 @@ Then follow the guided workflow in `.cursorrules/` for structured documentation.
 - **UX Teams** - User research and journey documentation
 - **DevOps Teams** - Operational readiness and deployment planning
 
+## Directory Standards
+
+This project follows the MASTER DIRECTORY STANDARDS.
+See `.directory-standards.md` for details.
+All documentation is stored in `01-Docs/` using the `NNN-abv-description.ext` format.
+
 ## Repository Structure
 
 ```
 ~/ai-dev/                         # 🎯 Clean, organized AI development workspace
-├── professional-templates/       # 22 master templates (read-only)
-│   ├── 01_prd.md                 # Product Requirements Document
-│   ├── 02_adr.md                 # Architecture Decision Record
-│   ├── 03_generate_tasks.md      # Task breakdown templates
-│   └── ... (19 more)             # Complete enterprise suite
-├── completed-docs/               # Generated project documentation
-│   ├── <your-project>/          # Individual project folders
-│   └── index.md                 # Project summaries
-├── docs/                        # 📚 Comprehensive documentation
-│   ├── guides/                  # User guides (Claude CLI, Cursor IDE, Quick Start)
-│   ├── examples/                # Real-world examples and templates
-│   ├── AI_ASSISTANT_PROMPTS.md  # AI integration guidance
-│   └── SOP.md                   # Development standards
-├── .cursorrules/               # Cursor IDE integration workflows
-├── form-system/                # Interactive form interface
-├── scripts/                    # Automation scripts
-├── archive/                    # Legacy files (preserved for reference)
-└── working-mds/               # Development reports & session logs
+├── 01-Docs/                     # All documentation (23 files, NNN-abv-description.ext format)
+├── 02-Src/                      # Source code (future use)
+├── 03-Tests/                    # Test suites (future use)
+├── 04-Assets/                   # Static assets (future use)
+├── 05-Scripts/                  # Automation scripts
+├── 06-Infrastructure/           # Infrastructure as Code (future use)
+├── 07-Releases/                 # Release artifacts (future use)
+├── 99-Archive/                  # Archived items (stus-og-ai-dev)
+├── professional-templates/      # 22 master templates (read-only)
+│   ├── 01_prd.md                # Product Requirements Document
+│   ├── 02_adr.md                # Architecture Decision Record
+│   ├── 03_generate_tasks.md     # Task breakdown templates
+│   └── ... (19 more)            # Complete enterprise suite
+├── .cursorrules/                # Cursor IDE integration workflows
+├── commands/                    # Slash commands
+├── form-system/                 # Interactive form interface
+├── .directory-standards.md      # MASTER directory standards reference
+├── README.md                    # This file - project overview
+├── CLAUDE.md                    # AI assistant guidance
+├── CHANGELOG.md                 # Version history
+└── LICENSE                      # Apache 2.0 License
 ```
 
 ## Key Features

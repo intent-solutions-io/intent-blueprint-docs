@@ -1,0 +1,38 @@
+{
+  "name": "AI DevOps Intent Solutions - Claude Code Plugins",
+  "description": "Enterprise-grade Claude Code plugins for development workflows, automation, and integrations",
+  "author": "Jeremy Longshore",
+  "homepage": "https://github.com/jeremylongshore/ai-devops-intent-solutions",
+  "plugins": [
+    {
+      "name": "deployment-tools",
+      "path": "examples/simple-command",
+      "description": "Automated deployment workflow commands for staging and production",
+      "version": "1.0.0",
+      "tags": ["deployment", "automation", "ci-cd"],
+      "status": "example"
+    },
+    {
+      "name": "code-quality",
+      "path": "examples/custom-agent",
+      "description": "Code quality analysis and security audit agent",
+      "version": "1.0.0",
+      "tags": ["security", "quality", "audit"],
+      "status": "example"
+    },
+    {
+      "name": "documentation-generator",
+      "path": "examples/full-featured",
+      "description": "Comprehensive documentation generation with hooks and commands",
+      "version": "1.0.0",
+      "tags": ["documentation", "automation", "workflow"],
+      "status": "example"
+    }
+  ],
+  "metadata": {
+    "created": "2025-10-09",
+    "updated": "2025-10-09",
+    "license": "MIT",
+    "repository": "https://github.com/jeremylongshore/ai-devops-intent-solutions"
+  }
+}

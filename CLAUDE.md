@@ -1,3 +1,14 @@
+## Task Tracking (Beads / bd)
+- Use `bd` for ALL tasks/issues (no markdown TODO lists).
+- Start of session: `bd ready`
+- Create work: `bd create "Title" -p 1 --description "Context + acceptance criteria"`
+- Update status: `bd update <id> --status in_progress`
+- Finish: `bd close <id> --reason "Done"`
+- End of session: `bd sync` (flush/import/export + git sync)
+- Manual testing safety:
+  - Prefer `BEADS_DIR` to isolate a workspace if needed. (`BEADS_DB` exists but is deprecated.)
+
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -15,19 +26,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an **AI development workflow system with dual AI assistant integration**. It provides 22 professional templates with guided prompts for users of all skill levels - from complete beginners to experienced developers. Works with both Claude Code CLI and Cursor IDE.
 
+## Directory Standards
+
+Follow `.directory-standards.md` for structure and file naming.
+- Store all docs in `01-Docs/`
+- Use `NNN-abv-description.ext` format with approved abbreviations
+- Maintain strict chronological order
+
 ## Directory Structure
 
 ```
 ~/ai-dev/                         # 🎯 AI DEVELOPMENT WORKFLOW SYSTEM
-├── professional-templates/       # Master template library (22 templates)
-├── completed-docs/              # Generated project documentation
-├── working-mds/                 # Reports and working documents
-├── archive/                     # Legacy files preserved
+├── 01-Docs/                     # All documentation (23 files, NNN-abv-description.ext format)
+├── 02-Src/                      # Source code (future use)
+├── 03-Tests/                    # Test suites (future use)
+├── 04-Assets/                   # Static assets (future use)
+├── 05-Scripts/                  # Automation scripts (export.js, test-export.js, build/deploy/maintenance)
+├── 06-Infrastructure/           # Infrastructure as Code (future use)
+├── 07-Releases/                 # Release artifacts (future use)
+├── 99-Archive/                  # Archived items (stus-og-ai-dev)
+├── professional-templates/      # Master template library (22 templates)
 ├── form-system/                 # Interactive form tools (Node.js CLI)
 ├── .cursorrules/                # Cursor IDE integration (4 rule files)
+├── commands/                    # Slash commands (new-project.md)
 ├── .github/workflows/           # CI/CD workflows (template verification)
+├── .directory-standards.md      # MASTER directory standards reference
 ├── CLAUDE.md                    # This file - AI assistant guidance
 ├── README.md                    # Quick start guide
+├── CHANGELOG.md                 # Version history
 ├── Makefile                     # Basic utilities (verify, tree, clean)
 └── templates -> professional-templates/  # Symlink for compatibility
 ```

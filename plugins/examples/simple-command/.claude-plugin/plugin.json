@@ -1,0 +1,9 @@
+{
+  "name": "deployment-tools",
+  "version": "1.0.0",
+  "description": "Simple deployment workflow commands",
+  "author": "Jeremy Longshore",
+  "license": "MIT",
+  "homepage": "https://github.com/jeremylongshore/ai-devops-intent-solutions",
+  "keywords": ["deployment", "automation", "workflow"]
+}
