@@ -14,7 +14,8 @@
 Phase 2 transforms IntentMail from a concept into a **programmable email control plane** with MCP integration, provider abstraction, and rules-as-code automation. This document maps the 11 core epics, their dependencies, and acceptance criteria.
 
 **Master Epic:** `ai-devops-intent-solutions-b76`
-**Title:** IntentMail — Phase 2: MCP Gateway + Rules-as-Code Email Control Plane
+**Title:** IntentMail — Phase 2: Gmail/Outlook MCP Gateway + Rules-as-Code Control Plane
+**V1 Priority:** Gmail + Outlook PRIMARY | IMAP SECONDARY | Fastmail OPTIONAL
 
 ---
 
@@ -28,10 +29,11 @@ graph TB
     E2[E2: Canonical Mail Model<br/>+ Provider Abstraction]
     E3[E3: Connectors Framework<br/>Connector SDK]
     E4[E4: Provider Connectors]
-    E4_1[E4.1: Fastmail JMAP]
-    E4_2[E4.2: Gmail]
-    E4_3[E4.3: Outlook Graph]
-    E4_4[E4.4: IMAP/SMTP]
+    E4_0[E4.0: OAuth/Auth<br/>Gmail + Outlook]
+    E4_2[E4.2: Gmail<br/>PRIMARY]
+    E4_3[E4.3: Outlook Graph<br/>PRIMARY]
+    E4_4[E4.4: IMAP/SMTP<br/>SECONDARY]
+    E4_1[E4.1: Fastmail JMAP<br/>OPTIONAL]
     E5[E5: Sync + Index Layer<br/>State + Deltas]
     E6[E6: Rules-as-Code Engine<br/>Audit + Rollback]
     E7[E7: MCP Server Surface<br/>Unified Tools]
@@ -65,11 +67,16 @@ graph TB
     E3 --> E5
     E3 --> E7
 
-    E4 --> E4_1
+    E4 --> E4_0
     E4 --> E4_2
     E4 --> E4_3
     E4 --> E4_4
+    E4 --> E4_1
     E4 --> E10
+
+    E9 --> E4_0
+    E4_0 --> E4_2
+    E4_0 --> E4_3
 
     E5 --> E6
     E5 --> E8
@@ -90,6 +97,9 @@ graph TB
     style E1 fill:#D5E8D4
     style E2 fill:#DAE8FC
     style E9 fill:#F8CECC
+    style E4_0 fill:#B7E1CD
+    style E4_2 fill:#B7E1CD
+    style E4_3 fill:#B7E1CD
 ```
 
 ---
@@ -106,7 +116,12 @@ graph TB
 Master epic for Phase 2: Transform email into a programmable control plane with MCP integration, provider abstraction, and rules-as-code automation.
 
 **Children:**
-11 core epics + 4 provider connector sub-epics (15 total)
+11 core epics + 5 provider connector sub-epics (16 total)
+- E4.0: OAuth/Auth (Gmail + Outlook shared)
+- E4.2: Gmail Connector (PRIMARY)
+- E4.3: Outlook Connector (PRIMARY)
+- E4.4: IMAP Fallback (SECONDARY)
+- E4.1: Fastmail (OPTIONAL)
 
 ---
 
@@ -145,7 +160,9 @@ Convert the original post into an actual build spec and V1 boundaries.
 **Blocks:** E3, E5, E6, E7
 
 **Purpose:**
-Define normalized entities across Gmail/Outlook/Fastmail/IMAP: Message, Thread, Label/Folder, Rule, Alias, Attachment, Identity.
+Define normalized entities with PRIMARY focus on Gmail + Outlook, plus Fastmail/IMAP: Message, Thread, Label/Folder, Rule, Alias, Attachment, Identity.
+
+**V1 Priority:** Gmail labels + Outlook folders → canonical label abstraction is CRITICAL PATH.
 
 **Acceptance Criteria:**
 - ✅ Canonical models defined with fields + identifiers
@@ -227,35 +244,75 @@ interface Connector {
 **Blocks:** E10
 
 **Purpose:**
-Implement connectors for Fastmail (JMAP), Gmail, Outlook (Graph), and IMAP/SMTP fallback.
+Implement connectors with Gmail + Outlook as V1 PRIMARY providers, IMAP as SECONDARY, and Fastmail as OPTIONAL.
+
+**V1 Priority:**
+- **PRIMARY:** Gmail + Outlook (full feature support required)
+- **SECONDARY:** IMAP (basic fallback)
+- **OPTIONAL:** Fastmail (nice-to-have)
 
 **Acceptance Criteria:**
-- ✅ All 4 connectors implemented
-- ✅ Each supports: search, fetch thread, list labels, apply/move, send
+- ✅ E4.0 OAuth/Auth flows for Gmail + Outlook implemented
+- ✅ E4.2 Gmail connector fully implemented (PRIMARY)
+- ✅ E4.3 Outlook connector fully implemented (PRIMARY)
+- ✅ E4.4 IMAP connector implemented (SECONDARY fallback)
+- ✅ E4.1 Fastmail connector implemented (OPTIONAL)
+- ✅ Each supports: search, fetch thread, list labels/folders, apply/move, send
 - ✅ Capability flags where provider lacks features
-- ✅ Integration tests passing
+- ✅ Integration tests passing for PRIMARY providers
 
 **Sub-Epics:**
 
-#### E4.1: Fastmail (JMAP) Connector
-**ID:** `ai-devops-intent-solutions-b76.4.1`
-**Protocol:** JMAP (RFC 8620)
-**Capabilities:** Full (search, threads, labels, send, delta sync)
+#### E4.0: OAuth/Auth Flows for Gmail + Outlook (Shared)
+**ID:** `ai-devops-intent-solutions-b76.4.5`
+**Priority:** PRIMARY (P1)
+**Protocol:** OAuth 2.0 (device flow + local callback)
+**Purpose:** Shared authentication infrastructure for Gmail + Outlook
+**Capabilities:**
+- Gmail OAuth local-first flow (device or local callback)
+- Microsoft identity OAuth local-first flow
+- Encrypted token storage (AES-256)
+- Token refresh logic
+- Consent screen handling
 
-#### E4.2: Gmail Connector
+#### E4.2: Gmail Connector (PRIMARY)
 **ID:** `ai-devops-intent-solutions-b76.4.2`
+**Priority:** PRIMARY (P1) - V1 Must-Have
 **Protocol:** Gmail API v1
-**Capabilities:** Full (search, threads, labels, send, push notifications)
+**Capabilities:** Full (search, threads, labels, send, History API delta sync, push notifications)
+**Key Features:**
+- Gmail-specific label management (multi-label support)
+- History API for efficient delta sync
+- Rate limit handling (250 req/user/sec)
+- Batch operations support
 
-#### E4.3: Outlook (Graph) Connector
+#### E4.3: Outlook (Graph) Connector (PRIMARY)
 **ID:** `ai-devops-intent-solutions-b76.4.3`
+**Priority:** PRIMARY (P1) - V1 Must-Have
 **Protocol:** Microsoft Graph API
-**Capabilities:** Full (search, threads, folders, send, delta sync)
+**Capabilities:** Full (search, threads, folders, send, delta queries, webhooks)
+**Key Features:**
+- Folder-to-label abstraction (single folder model)
+- Delta query with deltaLink/deltaToken
+- Throttling/retry-after handling
+- Tenant consent support
 
-#### E4.4: IMAP/SMTP Fallback Connector
+#### E4.4: IMAP/SMTP Fallback Connector (SECONDARY)
 **ID:** `ai-devops-intent-solutions-b76.4.4`
+**Priority:** SECONDARY (P2)
 **Protocol:** IMAP (RFC 3501) + SMTP
-**Capabilities:** Limited (basic search, no threads, folder-only, basic send)
+**Capabilities:** Limited (basic search, no threads, folder-only, basic send, UID-based sync)
+**Limitations:**
+- No native delta sync (full folder scans)
+- No multi-label support (folders only)
+- No push notifications (IDLE only)
+
+#### E4.1: Fastmail (JMAP) Connector (OPTIONAL)
+**ID:** `ai-devops-intent-solutions-b76.4.1`
+**Priority:** OPTIONAL (P3)
+**Protocol:** JMAP (RFC 8620)
+**Capabilities:** Full (search, threads, labels, send, state-based delta sync)
+**Note:** Fastmail is OPTIONAL for V1 - may be deferred to V2
 
 ---
 
@@ -284,11 +341,30 @@ Make "search + automation" fast and consistent.
 - Reconciliation algorithm
 - Idempotency implementation
 
-**Sync Strategies by Provider:**
-- **Gmail:** Push notifications + history API
-- **Outlook:** Delta query with skip tokens
-- **Fastmail:** JMAP push + state strings
-- **IMAP:** IDLE + UID polling
+**Sync Strategies by Provider (V1 Priority Order):**
+
+1. **Gmail (PRIMARY):** History API with historyId tracking
+   - Efficient delta sync using `users.history.list`
+   - Track historyId per mailbox for incremental changes
+   - Handle history types: messageAdded, messageDeleted, labelAdded, labelRemoved
+   - Fallback to full sync if history expires (>7 days)
+
+2. **Outlook (PRIMARY):** Microsoft Graph delta queries with deltaLink
+   - Use `/delta` endpoint with deltaLink/deltaToken
+   - Track @odata.deltaLink for subsequent queries
+   - Handle folder moves and message updates
+   - Supports webhooks for real-time notifications
+
+3. **IMAP (SECONDARY):** UID-based polling with IDLE
+   - Track UIDVALIDITY and UIDNEXT per folder
+   - No native delta sync - requires full folder scans
+   - IDLE command for push-like notifications
+   - Optimize with SEARCH for new UIDs only
+
+4. **Fastmail (OPTIONAL):** JMAP state-based sync
+   - Use `Email/changes` with state token
+   - Efficient delta sync with position markers
+   - May be deferred to V2
 
 ---
 
@@ -420,27 +496,61 @@ UI optimized for triage + automation, not reading every email.
 **Blocks:** E11
 
 **Purpose:**
-Token handling, scopes, encryption, audit posture.
+Token handling, scopes, encryption, audit posture with PRIMARY focus on Gmail + Outlook OAuth 2.0 flows.
+
+**V1 Priority:** Gmail + Outlook OAuth flows are CRITICAL PATH for E4.0.
 
 **Acceptance Criteria:**
+- ✅ Gmail OAuth 2.0 flow implemented (device or local callback)
+- ✅ Microsoft identity OAuth 2.0 flow implemented (device or local callback)
+- ✅ Encrypted token storage (AES-256, OS keychain integration)
+- ✅ Token refresh logic with automatic retry
 - ✅ Secret storage policy + rotation guidance
-- ✅ OAuth device flow or local callback flow (per provider)
 - ✅ RBAC boundaries (even if single-user now)
 - ✅ Threat model + mitigations
+- ✅ OAuth scopes documented per provider
 
 **Key Deliverables:**
 - Security baseline document (see `262-AT-DSGN-security-auth-baseline.md`)
-- Token storage implementation
-- OAuth flow per provider
+- **Gmail OAuth implementation** (device flow + local callback)
+- **Outlook OAuth implementation** (device flow + local callback with tenant support)
+- Encrypted token storage using OS keychains
+- Token refresh mechanism
+- OAuth flow for IMAP (SECONDARY)
+- OAuth flow for Fastmail (OPTIONAL)
 - RBAC design
 - Threat model + mitigations
 
+**OAuth Flows by Provider (V1 Priority):**
+
+1. **Gmail (PRIMARY):**
+   - OAuth 2.0 with Google Identity Platform
+   - Scopes: `https://www.googleapis.com/auth/gmail.readonly`, `.modify`, `.send`
+   - Device code flow OR local callback (http://localhost:8080)
+   - Supports multiple accounts
+   - Token refresh every 60 minutes
+
+2. **Outlook (PRIMARY):**
+   - OAuth 2.0 with Microsoft Identity Platform
+   - Scopes: `Mail.ReadWrite`, `Mail.Send`, `offline_access`
+   - Device code flow OR local callback
+   - Tenant consent handling (personal vs organizational)
+   - Token refresh based on expires_in
+
+3. **IMAP (SECONDARY):**
+   - OAuth 2.0 where supported (Gmail, Outlook via IMAP)
+   - Fallback to password auth for generic IMAP
+
+4. **Fastmail (OPTIONAL):**
+   - OAuth 2.0 or app-specific passwords
+   - May be deferred to V2
+
 **Security Principles:**
 1. **Zero trust** - Never trust, always verify
-2. **Least privilege** - Minimal scopes required
-3. **Defense in depth** - Multiple security layers
-4. **Audit everything** - Comprehensive logging
-5. **Encrypt everything** - At rest and in transit
+2. **Least privilege** - Minimal scopes required (PRIMARY: Gmail + Outlook scopes documented)
+3. **Defense in depth** - Multiple security layers (encrypted tokens, OS keychain, HTTPS-only)
+4. **Audit everything** - Comprehensive logging (all OAuth events logged)
+5. **Encrypt everything** - At rest (AES-256 tokens) and in transit (HTTPS/TLS 1.3)
 
 ---
 
