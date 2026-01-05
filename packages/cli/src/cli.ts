@@ -23,7 +23,7 @@ const program = new Command();
 program
   .name('blueprint')
   .description('Intent Blueprint - Enterprise AI Documentation Generator')
-  .version('2.6.0');
+  .version('2.7.0');
 
 // Init command
 program
@@ -589,6 +589,415 @@ program
   .description('Bi-directional sync with project management tools')
   .action(() => {
     console.log(chalk.yellow('\n⚠️  Sync feature coming soon!\n'));
+  });
+
+// Enterprise: API Server command
+program
+  .command('serve')
+  .description('Start the Blueprint REST API server')
+  .option('-p, --port <port>', 'Port to listen on', '3456')
+  .option('-h, --host <host>', 'Host to bind to', 'localhost')
+  .option('-k, --api-key <key>', 'API key for authentication')
+  .option('--no-cors', 'Disable CORS')
+  .option('-t, --templates <dir>', 'Custom templates directory')
+  .action(async (options) => {
+    console.log(chalk.blue('\n🚀 Intent Blueprint - API Server\n'));
+
+    const { ApiServer } = await import('./enterprise/api/index.js');
+    const { TemplateLoader } = await import('./enterprise/templates/index.js');
+
+    const server = new ApiServer({
+      port: parseInt(options.port),
+      host: options.host,
+      apiKey: options.apiKey,
+      cors: options.cors !== false,
+      logging: true,
+    });
+
+    // Load custom templates if specified
+    if (options.templates) {
+      const { existsSync } = await import('fs');
+      if (existsSync(options.templates)) {
+        const loader = new TemplateLoader(options.templates);
+        try {
+          const templates = loader.loadDirectory(options.templates);
+          server.loadTemplates(templates);
+          console.log(chalk.dim(`Loaded ${templates.length} custom templates\n`));
+        } catch (error) {
+          console.log(chalk.yellow(`Warning: Failed to load templates from ${options.templates}`));
+        }
+      }
+    }
+
+    try {
+      await server.start();
+      console.log(chalk.dim('Press Ctrl+C to stop\n'));
+
+      // Handle shutdown
+      process.on('SIGINT', async () => {
+        console.log(chalk.dim('\nShutting down...'));
+        await server.stop();
+        process.exit(0);
+      });
+    } catch (error) {
+      console.log(chalk.red('Failed to start server'));
+      console.error(error);
+      process.exit(1);
+    }
+  });
+
+// Enterprise: Template management
+program
+  .command('template <action>')
+  .description('Manage custom templates (list, create, validate, export)')
+  .option('-i, --id <id>', 'Template ID')
+  .option('-n, --name <name>', 'Template name')
+  .option('-f, --file <path>', 'Template file path')
+  .option('-o, --output <path>', 'Output file path')
+  .action(async (action, options) => {
+    const { TemplateLoader, TemplateEngine } = await import('./enterprise/templates/index.js');
+    const loader = new TemplateLoader();
+
+    switch (action) {
+      case 'list': {
+        console.log(chalk.blue('\n📋 Custom Templates\n'));
+        const { existsSync, readdirSync } = await import('fs');
+        const templatesDir = './templates';
+
+        if (!existsSync(templatesDir)) {
+          console.log(chalk.dim('No custom templates directory found.'));
+          console.log(chalk.dim('Create templates in ./templates/ directory.'));
+          return;
+        }
+
+        try {
+          const templates = loader.loadDirectory(templatesDir);
+          if (templates.length === 0) {
+            console.log(chalk.dim('No templates found.'));
+            return;
+          }
+
+          for (const t of templates) {
+            console.log(`  ${chalk.cyan(t.meta.id.padEnd(25))} ${t.meta.name}`);
+            console.log(chalk.dim(`    ${t.meta.description}`));
+          }
+          console.log(chalk.dim(`\nTotal: ${templates.length} templates`));
+        } catch (error) {
+          console.log(chalk.red('Failed to load templates'));
+          console.error(error);
+        }
+        break;
+      }
+
+      case 'create': {
+        console.log(chalk.blue('\n✨ Create Custom Template\n'));
+        const id = options.id || 'custom-template';
+        const name = options.name || 'Custom Template';
+        const template = TemplateLoader.createBlankTemplate(id, name);
+        const yaml = TemplateLoader.toYaml(template);
+
+        if (options.output) {
+          const { writeFileSync, mkdirSync, existsSync } = await import('fs');
+          const { dirname } = await import('path');
+          const dir = dirname(options.output);
+          if (!existsSync(dir)) {
+            mkdirSync(dir, { recursive: true });
+          }
+          writeFileSync(options.output, yaml);
+          console.log(chalk.green(`Created: ${options.output}`));
+        } else {
+          console.log(yaml);
+        }
+        break;
+      }
+
+      case 'validate': {
+        console.log(chalk.blue('\n✅ Validate Template\n'));
+        if (!options.file) {
+          console.log(chalk.red('Error: --file required'));
+          return;
+        }
+
+        try {
+          const template = loader.loadFile(options.file);
+          console.log(chalk.green('Template is valid!'));
+          console.log(`  ID: ${template.meta.id}`);
+          console.log(`  Name: ${template.meta.name}`);
+          console.log(`  Variables: ${template.variables.length}`);
+          console.log(`  Sections: ${template.sections.length}`);
+        } catch (error) {
+          console.log(chalk.red('Template validation failed:'));
+          console.error(error);
+        }
+        break;
+      }
+
+      case 'export': {
+        console.log(chalk.blue('\n📤 Export Template to YAML\n'));
+        if (!options.file && !options.id) {
+          console.log(chalk.red('Error: --file or --id required'));
+          return;
+        }
+
+        try {
+          const template = options.file
+            ? loader.loadFile(options.file)
+            : TemplateLoader.createBlankTemplate(options.id, options.name || options.id);
+
+          const yaml = TemplateLoader.toYaml(template);
+
+          if (options.output) {
+            const { writeFileSync } = await import('fs');
+            writeFileSync(options.output, yaml);
+            console.log(chalk.green(`Exported to: ${options.output}`));
+          } else {
+            console.log(yaml);
+          }
+        } catch (error) {
+          console.log(chalk.red('Export failed:'));
+          console.error(error);
+        }
+        break;
+      }
+
+      default:
+        console.log(chalk.yellow(`Unknown action: ${action}`));
+        console.log(chalk.dim('Available actions: list, create, validate, export'));
+    }
+  });
+
+// Enterprise: Team management
+program
+  .command('team <action>')
+  .description('Manage team configuration (init, members, libraries)')
+  .option('-i, --id <id>', 'Team or member ID')
+  .option('-n, --name <name>', 'Name')
+  .option('-e, --email <email>', 'Email')
+  .option('-r, --role <role>', 'Role: owner, admin, member, viewer')
+  .action(async (action, options) => {
+    const { TeamConfigManager } = await import('./enterprise/team/index.js');
+    const manager = new TeamConfigManager();
+
+    switch (action) {
+      case 'init': {
+        console.log(chalk.blue('\n🏢 Initialize Team Configuration\n'));
+
+        const id = options.id || 'my-team';
+        const name = options.name || 'My Team';
+
+        const config = manager.init(id, name);
+        console.log(chalk.green('Team configuration created!'));
+        console.log(`  ID: ${config.id}`);
+        console.log(`  Name: ${config.name}`);
+        console.log(`  Config: ${manager.getConfigPath()}`);
+        break;
+      }
+
+      case 'info': {
+        console.log(chalk.blue('\n🏢 Team Information\n'));
+
+        const config = manager.get();
+        if (!config) {
+          console.log(chalk.dim('No team configuration found.'));
+          console.log(chalk.dim('Run: blueprint team init'));
+          return;
+        }
+
+        console.log(`  ID: ${config.id}`);
+        console.log(`  Name: ${config.name}`);
+        console.log(`  Members: ${config.members?.length || 0}`);
+        console.log(`  Libraries: ${config.libraries?.length || 0}`);
+        console.log(`  Audit: ${config.audit?.enabled ? 'enabled' : 'disabled'}`);
+        break;
+      }
+
+      case 'add-member': {
+        console.log(chalk.blue('\n👤 Add Team Member\n'));
+
+        if (!options.id || !options.name) {
+          console.log(chalk.red('Error: --id and --name required'));
+          return;
+        }
+
+        try {
+          manager.addMember({
+            id: options.id,
+            name: options.name,
+            email: options.email,
+            role: options.role || 'member',
+          });
+          console.log(chalk.green(`Added member: ${options.name}`));
+        } catch (error) {
+          console.log(chalk.red('Failed to add member:'));
+          console.error(error);
+        }
+        break;
+      }
+
+      case 'remove-member': {
+        console.log(chalk.blue('\n👤 Remove Team Member\n'));
+
+        if (!options.id) {
+          console.log(chalk.red('Error: --id required'));
+          return;
+        }
+
+        const removed = manager.removeMember(options.id);
+        if (removed) {
+          console.log(chalk.green(`Removed member: ${options.id}`));
+        } else {
+          console.log(chalk.yellow(`Member not found: ${options.id}`));
+        }
+        break;
+      }
+
+      case 'list-members': {
+        console.log(chalk.blue('\n👥 Team Members\n'));
+
+        const members = manager.listMembers();
+        if (members.length === 0) {
+          console.log(chalk.dim('No team members.'));
+          return;
+        }
+
+        for (const m of members) {
+          console.log(`  ${chalk.cyan(m.id.padEnd(20))} ${m.name} (${m.role})`);
+          if (m.email) console.log(chalk.dim(`    ${m.email}`));
+        }
+        break;
+      }
+
+      case 'audit': {
+        console.log(chalk.blue('\n📊 Audit Log\n'));
+
+        const { AuditTrail } = await import('./enterprise/team/index.js');
+        const config = manager.get();
+
+        const audit = config
+          ? AuditTrail.fromTeamConfig(config)
+          : new AuditTrail();
+
+        const stats = audit.getStats();
+        console.log(`  Total generations: ${stats.totalGenerations}`);
+        console.log(`  Successful: ${stats.successfulGenerations}`);
+        console.log(`  Failed: ${stats.failedGenerations}`);
+        console.log(`  Avg duration: ${Math.round(stats.averageDuration)}ms`);
+
+        if (stats.recentActivity.length > 0) {
+          console.log(chalk.yellow('\nRecent activity:'));
+          for (const entry of stats.recentActivity.slice(0, 5)) {
+            console.log(`  ${chalk.dim(entry.timestamp)} ${entry.action} ${entry.template}`);
+          }
+        }
+        break;
+      }
+
+      default:
+        console.log(chalk.yellow(`Unknown action: ${action}`));
+        console.log(chalk.dim('Available actions: init, info, add-member, remove-member, list-members, audit'));
+    }
+  });
+
+// Enterprise: Model configuration
+program
+  .command('model <action>')
+  .description('Configure AI models (list, use, test)')
+  .option('-p, --provider <provider>', 'Provider: claude, openai, gemini, ollama')
+  .option('-m, --model <model>', 'Model ID or alias')
+  .option('-k, --key <key>', 'API key')
+  .option('--prompt <prompt>', 'Test prompt')
+  .action(async (action, options) => {
+    const { ModelRegistry } = await import('./enterprise/models/index.js');
+
+    switch (action) {
+      case 'list': {
+        console.log(chalk.blue('\n🤖 Available Models\n'));
+
+        const registry = new ModelRegistry();
+        const providers = registry.listProviders();
+
+        for (const p of providers) {
+          const status = p.configured ? chalk.green('✓') : chalk.red('✗');
+          console.log(`  ${status} ${chalk.cyan(p.name.padEnd(10))} ${p.configured ? 'configured' : 'not configured'}`);
+        }
+
+        console.log(chalk.dim('\nSet API keys via environment variables:'));
+        console.log(chalk.dim('  ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY'));
+        break;
+      }
+
+      case 'test': {
+        console.log(chalk.blue('\n🧪 Test Model\n'));
+
+        const provider = options.provider || 'claude';
+        const prompt = options.prompt || 'Say hello in one sentence.';
+
+        const registry = new ModelRegistry();
+        const providerInstance = registry.getProvider(provider);
+
+        if (!providerInstance) {
+          console.log(chalk.red(`Unknown provider: ${provider}`));
+          return;
+        }
+
+        if (!providerInstance.isConfigured()) {
+          console.log(chalk.red(`Provider ${provider} is not configured.`));
+          console.log(chalk.dim('Set the appropriate API key environment variable.'));
+          return;
+        }
+
+        const spinner = ora(`Testing ${provider}...`).start();
+
+        try {
+          const response = await registry.complete(
+            {
+              messages: [{ role: 'user', content: prompt }],
+              maxTokens: 100,
+            },
+            provider
+          );
+
+          spinner.succeed(chalk.green('Model responded!'));
+          console.log(`\n${chalk.cyan('Response:')} ${response.content}`);
+
+          if (response.usage) {
+            console.log(chalk.dim(`\nTokens: ${response.usage.promptTokens} in, ${response.usage.completionTokens} out`));
+          }
+        } catch (error) {
+          spinner.fail(chalk.red('Test failed'));
+          console.error(error);
+        }
+        break;
+      }
+
+      case 'info': {
+        console.log(chalk.blue('\n📋 Model Information\n'));
+
+        const modelId = options.model || 'claude';
+
+        const registry = new ModelRegistry();
+        const { provider, model } = registry.resolveAlias(modelId);
+
+        console.log(`  Alias: ${modelId}`);
+        console.log(`  Provider: ${provider}`);
+        console.log(`  Model: ${model}`);
+
+        const info = await registry.getModelInfo(model);
+        if (info) {
+          if (info.contextWindow) console.log(`  Context: ${info.contextWindow.toLocaleString()} tokens`);
+          if (info.maxOutput) console.log(`  Max output: ${info.maxOutput.toLocaleString()} tokens`);
+          if (info.capabilities) console.log(`  Capabilities: ${info.capabilities.join(', ')}`);
+          if (info.pricing) {
+            console.log(`  Pricing: $${info.pricing.input}/M in, $${info.pricing.output}/M out`);
+          }
+        }
+        break;
+      }
+
+      default:
+        console.log(chalk.yellow(`Unknown action: ${action}`));
+        console.log(chalk.dim('Available actions: list, test, info'));
+    }
   });
 
 /**

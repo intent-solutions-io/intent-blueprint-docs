@@ -1,7 +1,7 @@
 {
   "name": "@intentsolutions/blueprint",
-  "version": "2.6.0",
-  "description": "Enterprise AI documentation generator - CLI, MCP Server, and programmatic API",
+  "version": "2.7.0",
+  "description": "Enterprise AI documentation generator - CLI, MCP Server, REST API, and multi-model support",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -62,6 +62,7 @@
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.0.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"
