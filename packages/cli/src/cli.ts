@@ -150,79 +150,133 @@ program
     }
   });
 
-// Interview command
+// Interview command - Adaptive AI-guided interview
 program
   .command('interview')
-  .description('Interactive AI-guided documentation interview')
-  .action(async () => {
-    console.log(chalk.blue('\n🎤 Intent Blueprint - AI Interview Mode\n'));
-    console.log(chalk.dim('Answer the following questions to generate tailored documentation.\n'));
+  .description('Adaptive AI-guided documentation interview with smart detection')
+  .option('-q, --quick', 'Quick mode - just name and description')
+  .action(async (options) => {
+    console.log(chalk.blue('\n🎤 Intent Blueprint - Adaptive Interview\n'));
+    console.log(chalk.dim('Answer questions to generate tailored documentation.'));
+    console.log(chalk.dim('Questions adapt based on your answers.\n'));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'projectName',
-        message: chalk.cyan('What is the name of your project?'),
-        validate: (input: string) => input.length > 0 || 'Required',
-      },
-      {
-        type: 'editor',
-        name: 'projectDescription',
-        message: chalk.cyan('Describe your project in detail (opens editor):'),
-      },
-      {
-        type: 'list',
-        name: 'projectType',
-        message: chalk.cyan('What type of project is this?'),
-        choices: ['SaaS Web App', 'Mobile App', 'API/Backend', 'CLI Tool', 'Library/SDK', 'Desktop App', 'Other'],
-      },
-      {
-        type: 'checkbox',
-        name: 'techStack',
-        message: chalk.cyan('Select your tech stack:'),
-        choices: ['TypeScript', 'Python', 'Go', 'Rust', 'React', 'Vue', 'Node.js', 'PostgreSQL', 'MongoDB', 'Redis', 'AWS', 'GCP', 'Docker', 'Kubernetes'],
-      },
-      {
-        type: 'list',
-        name: 'scope',
-        message: chalk.cyan('How comprehensive should the documentation be?'),
-        choices: [
-          { name: 'MVP - Just the essentials (4 docs)', value: 'mvp' },
-          { name: 'Standard - Core documentation (12 docs)', value: 'standard' },
-          { name: 'Comprehensive - Full enterprise suite (22 docs)', value: 'comprehensive' },
-        ],
-      },
-      {
-        type: 'list',
-        name: 'audience',
-        message: chalk.cyan('Who is your target audience?'),
-        choices: [
-          { name: 'Startup - Move fast, iterate often', value: 'startup' },
-          { name: 'Business - Balanced approach', value: 'business' },
-          { name: 'Enterprise - Thorough, compliance-ready', value: 'enterprise' },
-        ],
-      },
-      {
-        type: 'input',
-        name: 'timeline',
-        message: chalk.cyan('What is your target launch timeline?'),
-        default: 'TBD',
-      },
-      {
-        type: 'input',
-        name: 'team',
-        message: chalk.cyan('How large is your team?'),
-        default: '1-5',
-      },
-    ]);
+    const { InterviewEngine } = await import('./interview/index.js');
+    const engine = new InterviewEngine();
+
+    if (options.quick) {
+      // Quick mode - just essentials
+      const basicAnswers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'projectName',
+          message: chalk.cyan('Project name:'),
+          validate: (input: string) => input.length > 0 || 'Required',
+        },
+        {
+          type: 'editor',
+          name: 'projectDescription',
+          message: chalk.cyan('Describe your project (opens editor):'),
+        },
+      ]);
+
+      engine.setAnswers(basicAnswers);
+    } else {
+      // Full adaptive interview
+      const groups = engine.getQuestionGroups();
+
+      for (const group of groups) {
+        if (!group.isActive || group.questions.length === 0) continue;
+
+        console.log(chalk.yellow(`\n━━━ ${group.name} ━━━`));
+        console.log(chalk.dim(group.description + '\n'));
+
+        for (const question of group.questions) {
+          // Skip if already answered or condition not met
+          const state = engine.getState();
+          if (state.answers[question.id] !== undefined) continue;
+
+          const promptConfig: Record<string, unknown> = {
+            name: 'answer',
+            message: chalk.cyan(question.text),
+          };
+
+          if (question.hint) {
+            promptConfig.message += chalk.dim(` (${question.hint})`);
+          }
+
+          switch (question.type) {
+            case 'text':
+              promptConfig.type = 'input';
+              if (question.default) promptConfig.default = question.default;
+              break;
+            case 'editor':
+              promptConfig.type = 'editor';
+              break;
+            case 'select':
+              promptConfig.type = 'list';
+              promptConfig.choices = question.options || [];
+              break;
+            case 'multiselect':
+              promptConfig.type = 'checkbox';
+              promptConfig.choices = question.options || [];
+              break;
+            case 'confirm':
+              promptConfig.type = 'confirm';
+              promptConfig.default = question.default ?? false;
+              break;
+            case 'number':
+              promptConfig.type = 'number';
+              if (question.default) promptConfig.default = question.default;
+              break;
+          }
+
+          try {
+            const { answer } = await inquirer.prompt([promptConfig]);
+            engine.answer(question.id, answer);
+          } catch {
+            // User cancelled
+            break;
+          }
+        }
+      }
+    }
+
+    // Complete interview and show results
+    const result = engine.complete();
 
     console.log(chalk.green('\n✅ Interview complete!\n'));
 
+    // Show detected context
+    console.log(chalk.yellow('━━━ Analysis ━━━'));
+    console.log(`  Project Type: ${chalk.cyan(result.detected.projectType)}`);
+    console.log(`  Complexity: ${chalk.cyan(result.detected.complexity)}`);
+    console.log(`  Suggested Scope: ${chalk.cyan(result.detected.suggestedScope)}`);
+    console.log(`  Confidence: ${chalk.cyan(result.detected.confidence + '%')}`);
+
+    if (result.detected.detectedTechnologies.length > 0) {
+      console.log(`  Technologies: ${chalk.cyan(result.detected.detectedTechnologies.join(', '))}`);
+    }
+
+    // Show gap analysis
+    if (result.gaps.missingRecommended.length > 0) {
+      console.log(chalk.yellow('\n━━━ Recommendations ━━━'));
+      for (const missing of result.gaps.missingRecommended) {
+        console.log(`  ${chalk.dim('•')} Consider adding: ${missing}`);
+      }
+    }
+
+    if (result.gaps.suggestions.length > 0) {
+      for (const suggestion of result.gaps.suggestions) {
+        console.log(`  ${chalk.dim('•')} ${suggestion}`);
+      }
+    }
+
+    // Confirm generation
     const { proceed } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'proceed',
-        message: 'Generate documentation now?',
+        message: '\nGenerate documentation now?',
         default: true,
       },
     ]);
@@ -231,24 +285,20 @@ program
       const spinner = ora('Generating documentation...').start();
 
       try {
-        const context: TemplateContext = {
-          projectName: answers.projectName,
-          projectDescription: answers.projectDescription,
-          scope: answers.scope,
-          audience: answers.audience,
-          projectType: answers.projectType,
-          techStack: answers.techStack,
-          timeline: answers.timeline,
-          team: answers.team,
-        };
-
+        const context = engine.toTemplateContext();
         const docs = generateAllDocuments(context);
-        const outputDir = `./docs/${answers.projectName.toLowerCase().replace(/\s+/g, '-')}`;
+        const outputDir = `./docs/${context.projectName.toLowerCase().replace(/\s+/g, '-')}`;
         const files = writeDocuments(docs, outputDir);
 
         spinner.succeed(chalk.green(`Generated ${docs.length} documents!`));
         console.log(chalk.dim(`\nOutput: ${outputDir}`));
         console.log(chalk.dim(`Files: ${files.length}`));
+
+        // Show what was generated
+        console.log(chalk.yellow('\n━━━ Documents Generated ━━━'));
+        for (const doc of docs) {
+          console.log(`  ${chalk.dim('•')} ${doc.name} (${doc.category})`);
+        }
       } catch (error) {
         spinner.fail(chalk.red('Generation failed'));
         console.error(error);

@@ -20,6 +20,13 @@ import {
   getTemplatesForScope,
   type TemplateContext,
 } from '../core/index.js';
+import {
+  InterviewEngine,
+  quickInterview,
+  getNextQuestion,
+  getProgress,
+  type InterviewAnswers,
+} from '../interview/index.js';
 
 // Tool schemas
 const GenerateSchema = z.object({
@@ -33,8 +40,8 @@ const GenerateSchema = z.object({
 });
 
 const InterviewSchema = z.object({
-  currentAnswers: z.record(z.string()).optional(),
-  questionIndex: z.number().default(0),
+  answers: z.record(z.unknown()).optional().describe('Answers provided so far'),
+  action: z.enum(['start', 'answer', 'complete', 'analyze']).default('start'),
 });
 
 const ListTemplatesSchema = z.object({
@@ -53,17 +60,6 @@ const ExportSchema = z.object({
   target: z.enum(['github', 'linear', 'jira', 'notion']),
   options: z.record(z.string()).optional(),
 });
-
-const INTERVIEW_QUESTIONS = [
-  { key: 'projectName', question: 'What is the name of your project?', required: true },
-  { key: 'projectDescription', question: 'In 2-3 sentences, what does your project do?', required: true },
-  { key: 'projectType', question: 'What type of project is this? (e.g., SaaS web app, mobile app, API, CLI tool)', required: true },
-  { key: 'audience', question: 'Who is your target audience? (startup, business, or enterprise)', required: true },
-  { key: 'scope', question: 'How comprehensive should the documentation be? (mvp: 4 docs, standard: 12 docs, comprehensive: 22 docs)', required: true },
-  { key: 'techStack', question: 'What technologies are you using? (comma-separated)', required: false },
-  { key: 'team', question: 'How large is your team?', required: false },
-  { key: 'timeline', question: 'What is your target launch timeline?', required: false },
-];
 
 const TOOLS: Tool[] = [
   {
@@ -169,23 +165,61 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     case 'blueprint_interview': {
       const input = InterviewSchema.parse(args);
-      const answers = input.currentAnswers || {};
-      const index = input.questionIndex;
+      const engine = new InterviewEngine();
 
-      if (index >= INTERVIEW_QUESTIONS.length) {
+      if (input.answers) {
+        engine.setAnswers(input.answers as InterviewAnswers);
+      }
+
+      const state = engine.getState();
+
+      if (input.action === 'analyze' || input.action === 'complete' || state.isComplete) {
+        const result = engine.complete();
         return {
           content: [{
             type: 'text',
-            text: `Interview complete!\n\nCollected:\n${Object.entries(answers).map(([k, v]) => `- ${k}: ${v}`).join('\n')}\n\nUse blueprint_generate with these values.`,
+            text: `Interview Analysis Complete!
+
+**Project:** ${result.answers.projectName || 'Untitled'}
+**Type:** ${result.detected.projectType}
+**Complexity:** ${result.detected.complexity}
+**Suggested Scope:** ${result.detected.suggestedScope} (${result.detected.suggestedScope === 'mvp' ? 4 : result.detected.suggestedScope === 'standard' ? 12 : 22} docs)
+**Confidence:** ${result.detected.confidence}%
+
+**Technologies Detected:** ${result.detected.detectedTechnologies.join(', ') || 'None specified'}
+**Features Detected:** ${result.detected.detectedFeatures.join(', ') || 'None detected'}
+
+${result.gaps.suggestions.length > 0 ? `**Suggestions:**\n${result.gaps.suggestions.map(s => `- ${s}`).join('\n')}` : ''}
+
+Use \`blueprint_generate\` with these values to create documentation.`,
           }],
         };
       }
 
-      const q = INTERVIEW_QUESTIONS[index];
+      const nextQ = state.currentQuestion;
+      const progress = state.progress;
+
+      if (!nextQ) {
+        return {
+          content: [{
+            type: 'text',
+            text: 'Interview complete! Use action: "complete" to see analysis.',
+          }],
+        };
+      }
+
       return {
         content: [{
           type: 'text',
-          text: `Question ${index + 1}/${INTERVIEW_QUESTIONS.length} ${q.required ? '(required)' : '(optional)'}\n\n${q.question}`,
+          text: `**Question ${progress.answered + 1}/${progress.total}** (${progress.percentage}% complete)
+${nextQ.required ? '*(required)*' : '*(optional)*'}
+
+${nextQ.text}
+${nextQ.hint ? `\n*Hint: ${nextQ.hint}*` : ''}
+${nextQ.options ? `\n**Options:** ${nextQ.options.join(', ')}` : ''}
+
+To answer, call blueprint_interview with:
+\`{ "answers": { "${nextQ.id}": "your answer", ...previous_answers }, "action": "answer" }\``,
         }],
       };
     }

@@ -22,5 +22,31 @@ export {
   type TemplateInfo,
 } from './core/index.js';
 
+// Interview engine exports
+export {
+  InterviewEngine,
+  quickInterview,
+  detectContext,
+  analyzeGaps,
+  analyzeDescription,
+  calculateComplexity,
+  generateSummary,
+  QUESTION_GROUPS,
+  getActiveQuestions,
+  getNextQuestion,
+  getProgress,
+  type InterviewState,
+  type InterviewAnswers,
+  type InterviewResult,
+  type Question,
+  type DetectedContext,
+  type GapAnalysis,
+  type ProjectType,
+  type Complexity,
+  type Audience,
+  type Scope,
+  type QuestionGroup,
+} from './interview/index.js';
+
 // MCP server export
 export { startMcpServer } from './mcp/index.js';
