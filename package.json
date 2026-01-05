@@ -1,42 +1,45 @@
 {
-  "name": "vibe-prd",
-  "version": "1.0.8",
-  "description": "AI-powered documentation generator that transforms ideas into enterprise-ready docs in minutes",
-  "main": "index.js",
+  "name": "intent-blueprint-docs",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Enterprise-grade AI documentation generator - 22 professional templates with MCP integration",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "export": "node exports/export.js",
-    "export:all": "node exports/export.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "verify": "./scripts/verify-templates.sh"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremylongshore/vibe-prd.git"
+    "url": "git+https://github.com/intent-solutions-io/intent-blueprint-docs.git"
   },
   "keywords": [
-    "ai",
-    "documentation",
-    "generator",
+    "ai-documentation",
+    "prd-generator",
+    "mcp-server",
     "claude-code",
     "cursor-ide",
-    "project-requirements",
     "enterprise-templates",
-    "prd",
-    "architecture",
-    "automation"
+    "documentation-generator",
+    "project-requirements"
   ],
-  "author": "Jeremy Longshore <jeremy@intentionsolutions.com>",
+  "author": "Jeremy Longshore <jeremy@intentsolutions.io>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/jeremylongshore/vibe-prd/issues"
+    "url": "https://github.com/intent-solutions-io/intent-blueprint-docs/issues"
   },
-  "homepage": "https://github.com/jeremylongshore/vibe-prd#readme",
-  "dependencies": {
-    "js-yaml": "^4.1.1",
-    "marked": "^12.0.0",
-    "puppeteer": "^22.0.0"
+  "homepage": "https://github.com/intent-solutions-io/intent-blueprint-docs#readme",
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
   },
-  "devDependencies": {},
   "engines": {
-    "node": ">=16.0.0"
-  }
+    "node": ">=18.0.0"
+  },
+  "packageManager": "npm@10.0.0"
 }

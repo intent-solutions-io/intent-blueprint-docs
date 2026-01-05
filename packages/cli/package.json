@@ -1,0 +1,50 @@
+{
+  "name": "@intentsolutions/blueprint",
+  "version": "2.0.0",
+  "description": "CLI for Intent Blueprint Docs - Generate enterprise documentation with AI",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "blueprint": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "cli",
+    "documentation",
+    "prd-generator",
+    "ai-documentation",
+    "enterprise-templates"
+  ],
+  "author": "Jeremy Longshore <jeremy@intentsolutions.io>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intent-solutions-io/intent-blueprint-docs.git",
+    "directory": "packages/cli"
+  },
+  "dependencies": {
+    "@intentsolutions/blueprint-core": "workspace:*",
+    "commander": "^12.0.0",
+    "inquirer": "^9.2.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/inquirer": "^9.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
