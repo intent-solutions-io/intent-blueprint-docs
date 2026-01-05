@@ -6,7 +6,7 @@ import {
   generateAllDocuments,
   writeDocuments,
   type TemplateContext,
-} from '@intentsolutions/blueprint-core';
+} from '@intentsolutions/blueprint';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';

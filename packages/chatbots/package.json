@@ -1,6 +1,6 @@
 {
   "name": "@intentsolutions/blueprint-chatbots",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Slack and Discord integrations for Intent Blueprint Docs",
   "type": "module",
   "main": "dist/index.js",
@@ -31,7 +31,7 @@
     "directory": "packages/chatbots"
   },
   "dependencies": {
-    "@intentsolutions/blueprint-core": "*",
+    "@intentsolutions/blueprint": "*",
     "@slack/bolt": "^3.17.0",
     "discord.js": "^14.14.0",
     "nodemailer": "^6.9.0",

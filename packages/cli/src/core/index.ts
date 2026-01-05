@@ -61,11 +61,14 @@ const SCOPE_TEMPLATES: Record<string, string[]> = {
  * Get the templates directory path
  */
 export function getTemplatesDir(): string {
-  // Try multiple locations
   const possiblePaths = [
+    // npm installed location
+    join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'templates', 'core'),
+    // Development - from packages/cli/src/core/
+    join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', 'professional-templates', 'core'),
+    // Working directory
+    join(process.cwd(), 'professional-templates', 'core'),
     join(process.cwd(), 'templates', 'core'),
-    join(process.cwd(), 'professional-templates'),
-    join(dirname(fileURLToPath(import.meta.url)), '..', 'templates'),
   ];
 
   for (const p of possiblePaths) {
@@ -74,7 +77,7 @@ export function getTemplatesDir(): string {
     }
   }
 
-  throw new Error('Templates directory not found');
+  throw new Error('Templates directory not found. Run from project root or install templates.');
 }
 
 /**
@@ -121,8 +124,6 @@ export function compileTemplate(templateName: string): HandlebarsTemplateDelegat
   }
 
   const templateContent = readFileSync(templatePath, 'utf-8');
-
-  // Replace {{DATE}} with current date
   const withDate = templateContent.replace(/\{\{DATE\}\}/g, new Date().toISOString().split('T')[0]);
 
   return Handlebars.compile(withDate);
@@ -169,7 +170,6 @@ export function writeDocuments(documents: GeneratedDocument[], outputDir: string
     writtenFiles.push(filePath);
   }
 
-  // Generate index
   const indexContent = `# ${documents[0]?.filename.split('-')[0] || 'Project'} Documentation
 
 Generated: ${new Date().toISOString()}

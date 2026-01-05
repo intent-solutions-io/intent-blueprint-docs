@@ -16,7 +16,7 @@ import {
   type TemplateContext,
   SCOPES,
   AUDIENCES,
-} from '@intentsolutions/blueprint-core';
+} from './core/index.js';
 
 const program = new Command();
 
