@@ -130,7 +130,7 @@ const TOOLS: Tool[] = [
 ];
 
 const server = new Server(
-  { name: 'intent-blueprint', version: '2.1.0' },
+  { name: 'intent-blueprint', version: '2.8.0' },
   { capabilities: { tools: {} } }
 );
 
