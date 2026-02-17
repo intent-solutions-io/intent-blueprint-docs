@@ -26,8 +26,8 @@ jobs:
 
       - name: Install deps (if package.json present)
         run: |
-          if [ -f package-lock.json ] || [ -f package.json ]; then
-            npm ci || npm i
+          if [ -f package.json ]; then
+            npm install
           fi
 
       - name: Run pa11y-ci

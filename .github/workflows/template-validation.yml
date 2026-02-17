@@ -23,8 +23,8 @@ jobs:
 
       - name: Install deps
         run: |
-          if [ -f package-lock.json ] || [ -f package.json ]; then
-            npm ci || npm install
+          if [ -f package.json ]; then
+            npm install
           fi
 
       - name: Create required directories
