@@ -36,12 +36,22 @@ Outputs:
 `);
 }
 
+async function findMdRecursive(dir) {
+  const results = [];
+  const entries = await fsp.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...await findMdRecursive(full));
+    else if (entry.name.endsWith('.md')) results.push(full);
+  }
+  return results;
+}
+
 async function listTemplates() {
   const dir = path.join(process.cwd(), 'professional-templates');
-  const entries = await fsp.readdir(dir, { withFileTypes: true });
-  const files = entries.filter(e => e.isFile() && e.name.endsWith('.md')).map(e => e.name).sort();
-  if (files.length === 0) throw new Error('No .md templates in professional-templates/');
-  return files.map(name => ({ name, abs: path.join(dir, name) }));
+  const allMd = await findMdRecursive(dir);
+  if (allMd.length === 0) throw new Error('No .md templates in professional-templates/');
+  return allMd.sort().map(abs => ({ name: path.basename(abs), abs }));
 }
 
 async function readIntake(projectDir) {
