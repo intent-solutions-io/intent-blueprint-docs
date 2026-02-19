@@ -28,9 +28,19 @@ function sh(cmd, args, opts={}) {
 
 async function ensureTemplates() {
   const dir = path.join(process.cwd(), 'professional-templates');
-  const files = await fsp.readdir(dir);
-  const md = files.filter(f => f.endsWith('.md'));
+  const md = await findMdRecursive(dir);
   if (md.length < 22) throw new Error(`Expected 22 templates; found ${md.length}`);
+}
+
+async function findMdRecursive(dir) {
+  const results = [];
+  const entries = await fsp.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...await findMdRecursive(full));
+    else if (entry.name.endsWith('.md')) results.push(full);
+  }
+  return results;
 }
 
 async function main() {
