@@ -1,8 +1,9 @@
 name: Renovate
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 9 * * *" # daily 09:17 America/Chicago
+  # schedule disabled — burns Actions minutes
+  # schedule:
+  #   - cron: "17 9 * * *" # daily 09:17 America/Chicago
 
 permissions:
   contents: write
