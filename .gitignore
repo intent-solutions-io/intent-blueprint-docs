@@ -69,3 +69,6 @@ completed-docs/
 # Archive directory
 archive/
 .turbo
+
+# Dolt database files (added by bd init)
+.dolt/
