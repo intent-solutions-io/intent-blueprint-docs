@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Intent Blueprint Docs** is an enterprise-grade AI documentation generator that creates 22 professional documents from project ideas. It provides dual AI assistant integration (Claude Code CLI and Cursor IDE) with guided prompts for users of all skill levels.
 
-**Release:** v2.0.0 - Enterprise Documentation Pipeline with gstack-adapted skills
+**Release:** v2.9.0 - Enterprise Documentation Pipeline with gstack-adapted skills
 **Template Count:** 22 verified templates with {{DATE}} placeholders
 
 ## Task Tracking (Beads)

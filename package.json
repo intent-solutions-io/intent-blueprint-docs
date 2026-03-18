@@ -1,6 +1,6 @@
 {
   "name": "intent-blueprint-docs",
-  "version": "2.0.0",
+  "version": "2.9.0",
   "private": true,
   "description": "Enterprise-grade AI documentation generator - 22 professional templates with MCP integration",
   "workspaces": [

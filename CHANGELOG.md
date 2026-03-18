@@ -7,10 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-03-18
+
 ### Added
-- GitHub community standards compliance
-- Enhanced repository optimization
-- Improved documentation structure
+- gstack integration: template build system, 5 Claude Code skills, quality test infrastructure (#35)
+- Template build system (`gen-skill-docs.ts`) with `{{PLACEHOLDER}}` resolution from shared blocks
+- 5 Claude Code skills: `review-docs`, `review-architecture`, `ship`, `document-release`, `qa-docs`
+- Vitest test suites: 38 skill validation tests, 133 doc quality tests
+- LLM-judge evaluation helper using Anthropic SDK
+- Review checklist rubric (`review/doc-checklist.md`)
+- ACKNOWLEDGMENTS.md crediting gstack (MIT → Apache 2.0)
+- 000-docs directory with doc-filing system
+- GitHub community standards compliance (SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md)
+
+### Changed
+- CLAUDE.md refreshed: v2.0.0 reference, new commands, gstack integration section
+- CI workflow: added skill validation and template freshness checks
+- Makefile: added `gen-skills` and `skill-check` targets
+- Vitest config: added `std-env` inline for ESM compatibility
+- LLM judge model now configurable via `ANTHROPIC_MODEL` env var
+
+### Fixed
+- Hardcoded `cd ~/ai-dev` → `git rev-parse --show-toplevel` in new-project template
+- Added `*)` fallback for invalid scope in new-project template
+- Use `find` instead of `ls` for comprehensive template listing
+- Fail fast on unresolved placeholders in `gen-skill-docs.ts`
+- Response parsing in `llm-judge.ts` uses `.find()` for text block
+- Template freshness guard assertion (empty suite no longer passes silently)
+- Fenced code blocks now have language identifiers (MD040)
+- Deduplicated `doc-checklist.md` → symlink from skill reference
+
+### Security
+- Resolved 27 npm audit vulnerabilities
+- 0 critical/high/moderate vulnerabilities
 
 ## [2.0.0] - 2025-09-18
 
