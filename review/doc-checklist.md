@@ -10,7 +10,7 @@ Review generated documentation for the issues listed below. Be specific — cite
 
 **Output format:**
 
-```
+```text
 Document Quality Review: N issues (X critical, Y informational)
 
 **AUTO-FIXED:**
@@ -83,7 +83,7 @@ If no issues found: `Document Quality Review: No issues found.`
 
 ## Severity Classification
 
-```
+```text
 CRITICAL (highest severity):          INFORMATIONAL (lower severity):
 ├─ Completeness                       ├─ Voice & Tone
 ├─ Accuracy                           ├─ Structure & Formatting

@@ -5,5 +5,10 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["test/**/*.test.ts"],
+    server: {
+      deps: {
+        inline: ["std-env"],
+      },
+    },
   },
 });

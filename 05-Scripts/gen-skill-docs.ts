@@ -400,6 +400,11 @@ function processTemplate(
   result.placeholdersResolved = count;
   result.unresolved = unresolved;
 
+  if (unresolved.length > 0) {
+    result.error = new Error(`Unresolved placeholders: ${unresolved.join(', ')}`);
+    return result;
+  }
+
   if (dryRun) {
     const existing = tryReadFile(outputPath);
     result.stale = existing !== resolved;

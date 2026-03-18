@@ -19,7 +19,7 @@ Specifically, the following were inspired by gstack's engineering workflow autom
 
 All adapted code carries attribution headers:
 
-```
+```html
 <!-- Portions adapted from gstack (https://github.com/garrytan/gstack) -->
 <!-- Original: MIT License, Copyright (c) Garry Tan -->
 ```

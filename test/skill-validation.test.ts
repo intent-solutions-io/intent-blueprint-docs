@@ -93,6 +93,10 @@ describe('Skill validation', () => {
 describe('Template freshness', () => {
   const templates = getTemplateFiles();
 
+  it('discovers at least one template file', () => {
+    expect(templates.length).toBeGreaterThan(0);
+  });
+
   for (const tmplPath of templates) {
     const outputPath = tmplPath.replace(/\.tmpl$/, '');
     const displayPath = path.relative(PROJECT_ROOT, outputPath);

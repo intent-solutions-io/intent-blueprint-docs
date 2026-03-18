@@ -56,7 +56,13 @@ export async function callJudge<T>(prompt: string): Promise<T> {
     }
   }
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const textBlock = response.content.find(
+    (block): block is { type: 'text'; text: string } => block.type === 'text',
+  );
+  if (!textBlock) {
+    throw new Error('Judge response did not include a text content block');
+  }
+  const text = textBlock.text;
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error(`Judge returned non-JSON: ${text.slice(0, 200)}`);
   return JSON.parse(jsonMatch[0]) as T;
