@@ -11,8 +11,13 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:skills": "npx vitest run test/skill-validation.test.ts",
+    "test:docs": "npx vitest run test/doc-quality-eval.test.ts",
+    "test:evals": "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY} npx vitest run test/doc-quality-eval.test.ts",
     "clean": "turbo run clean",
-    "verify": "./scripts/verify-templates.sh"
+    "verify": "./scripts/verify-templates.sh",
+    "gen:skill-docs": "npx tsx scripts/gen-skill-docs.ts",
+    "skill:check": "npx tsx scripts/gen-skill-docs.ts --dry-run"
   },
   "repository": {
     "type": "git",
@@ -35,8 +40,11 @@
   },
   "homepage": "https://github.com/intent-solutions-io/intent-blueprint-docs#readme",
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "tsx": "^4.19.0",
     "turbo": "^2.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.0"
   },
   "overrides": {
     "hono": ">=4.11.7",

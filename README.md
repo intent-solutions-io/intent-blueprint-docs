@@ -232,6 +232,12 @@ All project documentation lives in `000-docs/` using the doc-filing system:
 
 Contributions welcome! See the [Contributing Guide](000-docs/005-DR-GUID-contributing-guide.md).
 
+## Acknowledgments
+
+Engineering workflow patterns (template build system, review skills, ship workflow, QA methodology)
+adapted from [gstack](https://github.com/garrytan/gstack) by Garry Tan (MIT License).
+See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for details.
+
 ## License
 
 Apache 2.0 - See [LICENSE](LICENSE)

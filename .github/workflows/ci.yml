@@ -32,6 +32,12 @@ jobs:
         run: npm test
         continue-on-error: true
 
+      - name: Validate skills
+        run: npm run test:skills
+
+      - name: Check template freshness
+        run: npm run skill:check
+
   lint:
     runs-on: ubuntu-latest
     steps:
